@@ -1,0 +1,29 @@
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:147:23:virtual touchgfx::Drawable* touchgfx::Drawable::getFirstChild()	1
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:315:18:virtual void touchgfx::Drawable::setX(int16_t)	1
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:327:18:virtual void touchgfx::Drawable::setY(int16_t)	1
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:356:18:virtual void touchgfx::Drawable::setWidth(int16_t)	1
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:368:18:virtual void touchgfx::Drawable::setHeight(int16_t)	1
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:378:18:virtual void touchgfx::Drawable::childGeometryChanged()	1
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:389:18:virtual void touchgfx::Drawable::handleClickEvent(const touchgfx::ClickEvent&)	1
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:401:18:virtual void touchgfx::Drawable::handleGestureEvent(const touchgfx::GestureEvent&)	1
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:490:18:virtual void touchgfx::Drawable::handleDragEvent(const touchgfx::DragEvent&)	1
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:501:18:virtual void touchgfx::Drawable::handleTickEvent()	1
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:588:18:virtual void touchgfx::Drawable::moveTo(int16_t, int16_t)	1
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:703:18:virtual void touchgfx::Drawable::setupDrawChain(const touchgfx::Rect&, touchgfx::Drawable**)	1
+../../TouchGFX/gui/include/gui/screen1_screen/Board2048.hpp:19:13:Board2048::~Board2048()	1
+D:/Game2048/Game2048/TouchGFXDemo/TouchGFX/gui/src/screen1_screen/Board2048.cpp:149:6:virtual touchgfx::Rect Board2048::getSolidRect() const	1
+../../TouchGFX/gui/include/gui/screen1_screen/Board2048.hpp:19:13:virtual Board2048::~Board2048()	1
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:121:18:virtual void touchgfx::Drawable::invalidateContent() const	2
+D:/Game2048/Game2048/TouchGFXDemo/TouchGFX/gui/src/screen1_screen/Board2048.cpp:80:13:void uintToStr(uint16_t, char*)	5
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/widgets/Widget.hpp:45:18:virtual void touchgfx::Widget::getLastChild(int16_t, int16_t, touchgfx::Drawable**)	3
+D:/Game2048/Game2048/TouchGFXDemo/TouchGFX/gui/src/screen1_screen/Board2048.cpp:108:11:static touchgfx::colortype Board2048::tileColor(uint16_t)	13
+D:/Game2048/Game2048/TouchGFXDemo/TouchGFX/gui/src/screen1_screen/Board2048.cpp:129:11:static touchgfx::colortype Board2048::tileTextColor(uint16_t)	2
+D:/Game2048/Game2048/TouchGFXDemo/TouchGFX/gui/src/screen1_screen/Board2048.cpp:141:1:Board2048::Board2048()	1
+D:/Game2048/Game2048/TouchGFXDemo/TouchGFX/gui/src/screen1_screen/Board2048.cpp:160:6:void Board2048::fillRel(const touchgfx::Rect&, int16_t, int16_t, int16_t, int16_t, touchgfx::colortype) const	9
+D:/Game2048/Game2048/TouchGFXDemo/TouchGFX/gui/src/screen1_screen/Board2048.cpp:172:6:void Board2048::drawChar(const touchgfx::Rect&, int16_t, int16_t, char, int16_t, touchgfx::colortype) const	6
+D:/Game2048/Game2048/TouchGFXDemo/TouchGFX/gui/src/screen1_screen/Board2048.cpp:190:9:static int16_t Board2048::textWidth(const char*, int16_t)	3
+D:/Game2048/Game2048/TouchGFXDemo/TouchGFX/gui/src/screen1_screen/Board2048.cpp:204:9:int16_t Board2048::drawText(const touchgfx::Rect&, int16_t, int16_t, const char*, int16_t, touchgfx::colortype) const	2
+D:/Game2048/Game2048/TouchGFXDemo/TouchGFX/gui/src/screen1_screen/Board2048.cpp:218:6:void Board2048::drawCharFrac(const touchgfx::Rect&, int16_t, int16_t, char, int16_t, int16_t, touchgfx::colortype) const	6
+D:/Game2048/Game2048/TouchGFXDemo/TouchGFX/gui/src/screen1_screen/Board2048.cpp:242:9:static int16_t Board2048::textWidthFrac(const char*, int16_t, int16_t)	3
+D:/Game2048/Game2048/TouchGFXDemo/TouchGFX/gui/src/screen1_screen/Board2048.cpp:258:9:int16_t Board2048::drawTextFrac(const touchgfx::Rect&, int16_t, int16_t, const char*, int16_t, int16_t, touchgfx::colortype) const	2
+D:/Game2048/Game2048/TouchGFXDemo/TouchGFX/gui/src/screen1_screen/Board2048.cpp:274:6:virtual void Board2048::draw(const touchgfx::Rect&) const	10

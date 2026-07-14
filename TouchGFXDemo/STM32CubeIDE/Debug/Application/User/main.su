@@ -1,0 +1,17 @@
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/main.c:889:13:SPI5_Write	16	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/main.c:1001:6:StartDefaultTask	64	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/main.c:247:6:SystemClock_Config	96	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/main.c:154:5:main	112	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/main.c:733:6:IOE_Init	0	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/main.c:742:6:IOE_ITConfig	0	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/main.c:754:6:IOE_Write	32	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/main.c:765:9:IOE_Read	32	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/main.c:778:10:IOE_ReadMultiple	24	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/main.c:787:6:IOE_Delay	0	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/main.c:915:6:LCD_IO_Init	8	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/main.c:925:6:LCD_IO_WriteData	8	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/main.c:941:6:LCD_IO_WriteReg	8	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/main.c:960:10:LCD_IO_ReadData	24	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/main.c:987:6:LCD_Delay	0	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/main.c:1037:6:HAL_TIM_PeriodElapsedCallback	0	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/main.c:1055:6:Error_Handler	0	static

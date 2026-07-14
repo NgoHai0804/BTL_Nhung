@@ -1,0 +1,5 @@
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/game2048.c:34:16:prng_byte	0	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/game2048.c:124:13:add_block	24	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/game2048.c:151:6:game2048_init	8	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/game2048.c:182:9:game2048_move	56	static
+D:/Game2048/Game2048/TouchGFXDemo/Core/Src/game2048.c:382:10:game2048_get_best	0	static
