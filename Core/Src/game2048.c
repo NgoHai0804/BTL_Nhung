@@ -116,8 +116,8 @@ static void add_block(Game2048* game, uint8_t num)
 
     while (counter < num)
     {
-        uint8_t x = prng_byte() % 4;
-        uint8_t y = prng_byte() % 4;
+        uint8_t x = prng_byte() % 4; // Vị trí x ngẫu nhiên
+        uint8_t y = prng_byte() % 4; // Vị trí y
 
         if (game->v[x][y] == 0)
         {
@@ -126,6 +126,8 @@ static void add_block(Game2048* game, uint8_t num)
 
             game->v[x][y] = 1;
             game->g[x][y] = value;
+
+
             if (game->maxNum < value)
                 game->maxNum = value;
             counter++;
