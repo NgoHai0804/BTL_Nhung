@@ -157,6 +157,7 @@ static uint8_t move_up(Game2048* game)
                     {
                         if (g[k - 1][j] == g[k][j] && !merged)
                         {
+                            // Gộp 2 ô
                             g[k - 1][j] += g[k - 1][j];
                             g[k][j] = 0;
                             v[k][j] = 0;
@@ -207,6 +208,7 @@ static uint8_t move_down(Game2048* game)
                     {
                         if (g[k][j] == g[k - 1][j] && !merged)
                         {
+                            // Gộp 2 ô
                             g[k][j] += g[k - 1][j];
                             g[k - 1][j] = 0;
                             v[k - 1][j] = 0;
@@ -257,6 +259,7 @@ static uint8_t move_left(Game2048* game)
                     {
                         if (g[i][k - 1] == g[i][k] && !merged)
                         {
+                            // Gộp 2 ô
                             g[i][k - 1] += g[i][k];
                             g[i][k] = 0;
                             v[i][k] = 0;
@@ -307,6 +310,7 @@ static uint8_t move_right(Game2048* game)
                     {
                         if (g[i][k] == g[i][k - 1] && !merged)
                         {
+                            // Gộp 2 ô
                             g[i][k] += g[i][k - 1];
                             g[i][k - 1] = 0;
                             v[i][k - 1] = 0;
@@ -342,7 +346,7 @@ static void update_after_move(Game2048* game, uint8_t moved)
     if (moved)
         add_block(game, 1);
 
-    // Ưu tiên kiểm tra thắng trước, rồi mới kiểm tra thua
+    // Kiểm tra thắng trước, rồi mới kiểm tra thua
     if (has_won(game->g))
         game->state = GAME_WIN;
     else if (is_game_over(game->g, game->v))

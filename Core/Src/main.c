@@ -89,8 +89,8 @@ const osThreadAttr_t GUI_Task_attributes = {
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* USER CODE BEGIN PV */
-uint8_t isRevD = 0; /* Applicable only for STM32F429I DISCOVERY REVD and above */
-osMessageQueueId_t myQueue01Handle;
+uint8_t isRevD = 0; /* 1 = board F429I-DISCO Rev D trở lên (ảnh hưởng xử lý cảm ứng) */
+osMessageQueueId_t myQueue01Handle; /* hàng đợi hướng đi từ nút → GUI/game */
 const osMessageQueueAttr_t myQueue01_attributes={
 		.name = "myQueue01"
 };
@@ -205,7 +205,7 @@ int main(void)
   /* USER CODE END RTOS_TIMERS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
+  /* Hàng đợi 16 phần tử: mỗi phần tử là mã hướng (uint16_t) */
   myQueue01Handle = osMessageQueueNew(16, sizeof(uint16_t), &myQueue01_attributes);
   /* USER CODE END RTOS_QUEUES */
 
@@ -503,16 +503,14 @@ static void MX_SPI5_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN SPI5_Init 2 */
-  // Check if the board has the old or new revision of the gyroscope
-  // This tells if the board is revision D or newer
-  // It is used to handle the touch input correctly
-  const uint8_t READ_ID_CMD = 0x8F; // 0b10001111 = set read bit and register address of WHO_AM_I
+  /* Đọc WHO_AM_I qua SPI5: ID 0xD3 → board Rev D (cách xử lý cảm ứng khác) */
+  const uint8_t READ_ID_CMD = 0x8F;
   uint8_t pdata = 0;
   HAL_GPIO_WritePin(SPI5_NCS_GPIO_Port, SPI5_NCS_Pin, GPIO_PIN_RESET);
   HAL_SPI_Transmit(&hspi5, &READ_ID_CMD, 1, 1000);
   HAL_SPI_Receive(&hspi5, &pdata, 1, 1000);
   HAL_GPIO_WritePin(SPI5_NCS_GPIO_Port, SPI5_NCS_Pin, GPIO_PIN_SET);
-  if (pdata == 0xD3) // 0b11010011
+  if (pdata == 0xD3)
   {
     isRevD = 1;
   }
@@ -649,11 +647,8 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
-  /* 4 nút bấm cho game 2048: PC13=LÊN, PC11=XUỐNG, PA5=TRÁI, PA7=PHẢI.
-     Chọn các chân này để tránh xung đột trên board F429I-DISCO:
-       - PA3/PA4 đã dùng cho màn hình LCD (LTDC_B5 / LTDC_VSYNC)
-       - PA1/PA2 nối với chân ngắt của cảm biến con quay trên board
-     Nút nối xuống GND, dùng điện trở kéo lên nội (mức tích cực thấp). */
+  /* 4 nút game: PC13=lên, PC11=xuống, PA5=trái, PA7=phải
+     Nối GND, kéo lên nội (nhấn = mức thấp). Tránh PA1–PA4 (LCD/gyro). */
   GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
@@ -732,8 +727,7 @@ static void BSP_SDRAM_Initialization_Sequence(SDRAM_HandleTypeDef *hsdram, FMC_S
   */
 void IOE_Init(void)
 {
-  //Dummy function called when initializing to stmpe811 to setup the i2c.
-  //This is done with cubmx and is therfore not done here.
+  /* I2C đã setup bằng CubeMX */
 }
 
 /**
@@ -741,8 +735,7 @@ void IOE_Init(void)
   */
 void IOE_ITConfig(void)
 {
-  //Dummy function called when initializing to stmpe811 to setup interupt for the i2c.
-  //The interupt is not used in our case, therefore nothing is done here.
+  /* không dùng IT của stmpe811 */
 }
 
 /**
@@ -992,36 +985,29 @@ void LCD_Delay(uint32_t Delay)
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
-/**
-  * @brief  Function implementing the defaultTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
-/* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
-  /* 4 nút: PC13=LÊN(0), PC11=XUỐNG(1), PA5=TRÁI(2), PA7=PHẢI(3).
-     Mức tích cực thấp (kéo lên). Gửi mã hướng vào hàng đợi khi nhấn xuống. */
+  /* Quét 4 nút, gửi mã hướng vào hàng đợi khi phát hiện nhấn
+     0=lên, 1=xuống, 2=trái, 3=phải */
   GPIO_TypeDef* const btnPort[4] = { GPIOC, GPIOC, GPIOA, GPIOA };
   const uint16_t      btnPins[4] = { GPIO_PIN_13, GPIO_PIN_11, GPIO_PIN_5, GPIO_PIN_7 };
-  uint8_t prev[4] = { 1, 1, 1, 1 };   /* trạng thái nút lần đọc trước (1 = nhả) */
+  uint8_t prev[4] = { 1, 1, 1, 1 }; /* lần đọc trước: 1 = đang nhả */
 
-  /* Vòng lặp vô hạn */
   for(;;)
   {
     for (uint8_t i = 0; i < 4; i++)
     {
-      uint8_t now = (HAL_GPIO_ReadPin(btnPort[i], btnPins[i]) == GPIO_PIN_RESET) ? 0 : 1; /* 0 = đang nhấn */
-      /* Phát hiện sườn xuống (nhả -> nhấn) để mỗi lần nhấn chỉ gửi một lệnh. */
+      uint8_t now = (HAL_GPIO_ReadPin(btnPort[i], btnPins[i]) == GPIO_PIN_RESET) ? 0 : 1;
+      /* Chỉ gửi 1 lần mỗi lần nhấn (sườn nhả → nhấn) */
       if (now == 0 && prev[i] == 1)
       {
-        uint16_t dir = i; /* 0=lên, 1=xuống, 2=trái, 3=phải */
+        uint16_t dir = i;
         osMessageQueuePut(myQueue01Handle, &dir, 0, 10);
       }
       prev[i] = now;
     }
-    osDelay(20); /* chu kỳ lấy mẫu kiêm chống dội phím */
+    osDelay(20); /* chu kỳ quét + chống dội phím */
   }
   /* USER CODE END 5 */
 }
