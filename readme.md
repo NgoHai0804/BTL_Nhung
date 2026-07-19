@@ -13,12 +13,12 @@ Bản 2048 chạy trên kit **STM32F429I Discovery**, hiển thị bằng **Touc
 
 ## Phần cứng & điều khiển
 
-| Nút   | GPIO   | Mã hướng (`GAME2048_DIR_*`) |
-|-------|--------|-----------------------------|
-| Lên   | PC13   | `0`                         |
-| Xuống | PC11   | `1`                         |
-| Trái  | PA5    | `2`                         |
-| Phải  | PA7    | `3`                         |
+| Nút   | GPIO | Mã hướng (`GAME2048_DIR_*`) |
+| ----- | ---- | --------------------------- |
+| Lên   | PC13 | `0`                         |
+| Xuống | PC11 | `1`                         |
+| Trái  | PA5  | `2`                         |
+| Phải  | PA7  | `3`                         |
 
 - Nút mức tích cực thấp (kéo lên), phát hiện cạnh nhấn xuống.
 - Màn hình: **320×240**, 16 bpp (cấu hình TBS TouchGFX).
@@ -37,13 +37,13 @@ Nút GPIO  →  FreeRTOS (queue)  →  Screen1View  →  game2048_*  →  Game20
 
 ## File chính
 
-| File | Vai trò |
-|------|---------|
-| `Core/Inc/game2048.h` | API và cấu trúc trạng thái ván |
-| `Core/Src/game2048.c` | Luật chơi (di chuyển, gộp, thắng/thua, điểm) |
-| `TouchGFX/gui/.../Screen1View.cpp` | Khởi tạo ván, xử lý input mỗi frame |
-| `TouchGFX/gui/.../Board2048.cpp` | Widget vẽ bàn 2048 |
-| `Core/Src/main.c` | Init MCU, FreeRTOS, task đọc nút |
+| File                               | Vai trò                                      |
+| ---------------------------------- | -------------------------------------------- |
+| `Core/Inc/game2048.h`              | API và cấu trúc trạng thái ván               |
+| `Core/Src/game2048.c`              | Luật chơi (di chuyển, gộp, thắng/thua, điểm) |
+| `TouchGFX/gui/.../Screen1View.cpp` | Khởi tạo ván, xử lý input mỗi frame          |
+| `TouchGFX/gui/.../Board2048.cpp`   | Widget vẽ bàn 2048                           |
+| `Core/Src/main.c`                  | Init MCU, FreeRTOS, task đọc nút             |
 
 ### API logic
 
@@ -66,3 +66,25 @@ Yêu cầu: [STM32CubeProgrammer](https://www.st.com/en/development-tools/stm32c
 - Dựa trên TBS TouchGFX cho STM32F429I Discovery (REV D01).
 - Logic tham khảo demo STM32 `User/2048game/2048game.c`.
 - Pin đo hiệu năng (tùy chọn): `VSYNC_FREQ` PE2, `RENDER_TIME` PE3, `FRAME_RATE` PE4, `MCU_ACTIVE` PE5.
+
+1. Về mặt kiến trúc và thiết kế tổng thể: Tách logic game ra giao diện TouchGFX
+   - Dễ bảo trì: Thay đổi giao diện không ảnh hưởng tới luật chơi
+   - Dễ kiểm tra lỗi
+   - Tái sử dụng logic game
+   - Cần cầu nối liên kết giữa logic - graphic
+
+2. Luồng dữ liệu
+   - StartDefaultTask() quét chân GPIO
+   - Phát hiện nút nhân -> gửi lệnh 0 - 3 vào hàng đợi FreeRTOS myQueue01Handle
+   - Task GUI_Task của TouchGFX chạy và gọi hàm tickEvent() trong Screen1View ở mỗi frame
+   - tickEvent() kiểm tra và lấy mã lệnh từ Queue
+   - tickEvent() gọi game2048_move() cập nhật trạng thái của struct game
+   - (áp dụng cho case thay đổi) TouchGFX gọi hàm draw() để đọc dữ liệu và vẽ lên màn
+
+3. Phương án giao tiếp backend: Sử dụng queue qua FreeRTOS
+   - Biến toàn cục -> tệ do cần cơ chế giải quyết tranh chấp
+   - Ngắt ngoài (cấu hình ngắt cho từng nút) -> OK nhưng với 2048 thì polling 20ms là ổn
+
+4. Hướng phát triển
+   - Animation khi dịch chuyển khối
+   - Lưu kỷ lục vĩnh viễn: maybe sử dụng HAL_FLASH_Program để lưu điểm (để ý số lần ghi/xóa giới hạn Flash) or EEPROM giả lập giúp tăng tuổi thọ ghi/xóa

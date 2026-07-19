@@ -158,12 +158,8 @@ static uint8_t move_up(Game2048* game)
                         if (g[k - 1][j] == g[k][j] && !merged)
                         {
                             g[k - 1][j] += g[k - 1][j];
-                            g[k][j] = 0;
-                            v[k][j] = 0;
-
-                            // Cập nhật số lớn nhất và điểm số
-                            if (game->maxNum < g[k - 1][j]) game->maxNum = g[k - 1][j];
-                            game->score += g[k - 1][j];
+                            g[k][j] = 0; v[k][j] = 0;
+                            update_score_on_merge(game, g[k - 1][j]);
                             moved = 1;
                             merged = 1;
                         }
@@ -208,12 +204,8 @@ static uint8_t move_down(Game2048* game)
                         if (g[k][j] == g[k - 1][j] && !merged)
                         {
                             g[k][j] += g[k - 1][j];
-                            g[k - 1][j] = 0;
-                            v[k - 1][j] = 0;
-
-                            // Cập nhật số lớn nhất và điểm số
-                            if (game->maxNum < g[k][j]) game->maxNum = g[k][j];
-                            game->score += g[k][j];
+                            g[k - 1][j] = 0; v[k - 1][j] = 0;
+                            update_score_on_merge(game, g[k][j]);
                             moved = 1;
                             merged = 1;
                         }
@@ -258,12 +250,8 @@ static uint8_t move_left(Game2048* game)
                         if (g[i][k - 1] == g[i][k] && !merged)
                         {
                             g[i][k - 1] += g[i][k];
-                            g[i][k] = 0;
-                            v[i][k] = 0;
-
-                            // Cập nhật số lớn nhất và điểm số
-                            if (game->maxNum < g[i][k - 1]) game->maxNum = g[i][k - 1];
-                            game->score += g[i][k - 1];
+                            g[i][k] = 0; v[i][k] = 0;
+                            update_score_on_merge(game, g[i][k - 1]);
                             moved = 1;
                             merged = 1;
                         }
@@ -308,12 +296,8 @@ static uint8_t move_right(Game2048* game)
                         if (g[i][k] == g[i][k - 1] && !merged)
                         {
                             g[i][k] += g[i][k - 1];
-                            g[i][k - 1] = 0;
-                            v[i][k - 1] = 0;
-
-                            // Cập nhật điểm số và số lớn nhất
-                            if (game->maxNum < g[i][k]) game->maxNum = g[i][k];
-                            game->score += g[i][k];
+                            g[i][k - 1] = 0; v[i][k - 1] = 0;
+                            update_score_on_merge(game, g[i][k]);
                             moved = 1;
                             merged = 1;
                         }

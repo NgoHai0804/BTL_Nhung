@@ -160,7 +160,10 @@ int main(void)
 
   /* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  /*
+    Reset of all peripherals, Initializes the Flash interface and the Systick. 
+    Hàm khởi tạo cơ bản cho thư viện HAL thiết lập xung nhịp
+  */
   HAL_Init();
 
   /* USER CODE BEGIN Init */
@@ -174,14 +177,29 @@ int main(void)
 
   /* USER CODE END SysInit */
 
-  /* Initialize all configured peripherals */
+  /*
+    Initialize all configured peripherals 
+    Hàm do CubeMX tạo ra xử lý cấu hình ngoại vi
+  */
+  // Cấu hình chân GPIO - 4 chân nút nhấn
   MX_GPIO_Init();
+
   MX_CRC_Init();
   MX_I2C3_Init();
   MX_SPI5_Init();
+
+  // Cấu hình giao tiếp với SDRAM nơi TouchGFX lưu chữ framebuffer
   MX_FMC_Init();
+
+  // Cấu hình bộ điều khiển LCD
+  //LCD-TFT DisplayController: đọc dữ liệu từ framebuffer + gửi tín hiệu -> màn LCD (dùng DMA riêng)
   MX_LTDC_Init();
+
+  // Bật bộ tăng tốc đồ họa 2D giúp việc vẽ nhanh hơn
+  // Khi chạy HAL::cd().fillRect() qua hàm fillRel() -> TouchGFX dùng DMA2D thực hiện
   MX_DMA2D_Init();
+
+  // Khởi tạo thành phần cần thiết cho TouchGFX
   MX_TouchGFX_Init();
   /* Call PreOsInit function */
   MX_TouchGFX_PreOSInit();
@@ -189,7 +207,7 @@ int main(void)
 
   /* USER CODE END 2 */
 
-  /* Init scheduler */
+  // Hàm khởi động nhân HĐH FreeRTOS
   osKernelInitialize();
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -205,15 +223,22 @@ int main(void)
   /* USER CODE END RTOS_TIMERS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
+  /* 
+    Hàm tạo hàng đợi xử lý task nhấn nút chứa lệnh di chuyển gửi cho task giao diện
+    -> Tránh gây xung đột
+  */
   myQueue01Handle = osMessageQueueNew(16, sizeof(uint16_t), &myQueue01_attributes);
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* creation of defaultTask */
+  /*
+    Luồng xư lý task đọc nút nhấn
+  */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
-  /* creation of GUI_Task */
+  /*
+    Luồng xử lý chạy toàn bộ Framework TouchGFX
+  */
   GUI_TaskHandle = osThreadNew(TouchGFX_Task, NULL, &GUI_Task_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -224,7 +249,9 @@ int main(void)
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
 
-  /* Start scheduler */
+  /* 
+    Hàm lập lịch
+  */
   osKernelStart();
 
   /* We should never get here as control is now taken by the scheduler */
@@ -649,11 +676,12 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
-  /* 4 nút bấm cho game 2048: PC13=LÊN, PC11=XUỐNG, PA5=TRÁI, PA7=PHẢI.
-     Chọn các chân này để tránh xung đột trên board F429I-DISCO:
+  /*
+    4 nút bấm cho game 2048: PC13=LÊN, PC11=XUỐNG, PA5=TRÁI, PA7=PHẢI.
+    Chọn các chân này để tránh xung đột trên board F429I-DISCO:
        - PA3/PA4 đã dùng cho màn hình LCD (LTDC_B5 / LTDC_VSYNC)
        - PA1/PA2 nối với chân ngắt của cảm biến con quay trên board
-     Nút nối xuống GND, dùng điện trở kéo lên nội (mức tích cực thấp). */
+    Nút nối xuống GND, dùng điện trở kéo lên nội (mức tích cực thấp). */
   GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
@@ -1001,27 +1029,41 @@ void LCD_Delay(uint32_t Delay)
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
-  /* 4 nút: PC13=LÊN(0), PC11=XUỐNG(1), PA5=TRÁI(2), PA7=PHẢI(3).
-     Mức tích cực thấp (kéo lên). Gửi mã hướng vào hàng đợi khi nhấn xuống. */
-  GPIO_TypeDef* const btnPort[4] = { GPIOC, GPIOC, GPIOA, GPIOA };
-  const uint16_t      btnPins[4] = { GPIO_PIN_13, GPIO_PIN_11, GPIO_PIN_5, GPIO_PIN_7 };
-  uint8_t prev[4] = { 1, 1, 1, 1 };   /* trạng thái nút lần đọc trước (1 = nhả) */
+  /* 
+    Cấu hình 4 nút bấm cho game 2048.
+    Mức tích cực thấp (kéo lên). Gửi mã hướng vào hàng đợi khi nhấn xuống.
+  */
+  struct Button {
+      GPIO_TypeDef* port;
+      const uint16_t pin;
+      const uint16_t direction;
+      uint8_t prevState; // 1 = thả, 0 = nhấn
+  };
+
+  struct Button buttons[4] = {
+      { GPIOC, GPIO_PIN_13, GAME2048_DIR_UP,    1 },
+      { GPIOC, GPIO_PIN_11, GAME2048_DIR_DOWN,  1 },
+      { GPIOA, GPIO_PIN_5,  GAME2048_DIR_LEFT,  1 },
+      { GPIOA, GPIO_PIN_7,  GAME2048_DIR_RIGHT, 1 }
+  };
 
   /* Vòng lặp vô hạn */
   for(;;)
   {
     for (uint8_t i = 0; i < 4; i++)
     {
-      uint8_t now = (HAL_GPIO_ReadPin(btnPort[i], btnPins[i]) == GPIO_PIN_RESET) ? 0 : 1; /* 0 = đang nhấn */
-      /* Phát hiện sườn xuống (nhả -> nhấn) để mỗi lần nhấn chỉ gửi một lệnh. */
-      if (now == 0 && prev[i] == 1)
+      //HAL_GPIO_ReadPin: Đọc trạng thái điện áp của Button
+      uint8_t currentState = HAL_GPIO_ReadPin(buttons[i].port, buttons[i].pin);
+      // Kiểm tra trạng thái đang sườn lên hay sườn xuống 
+      if (currentState == GPIO_PIN_RESET && buttons[i].prevState == GPIO_PIN_SET)
       {
-        uint16_t dir = i; /* 0=lên, 1=xuống, 2=trái, 3=phải */
-        osMessageQueuePut(myQueue01Handle, &dir, 0, 10);
+        // Gửi vào hàng đợi
+        osMessageQueuePut(myQueue01Handle, &buttons[i].direction, 0, 10);
       }
-      prev[i] = now;
+      buttons[i].prevState = currentState;
     }
-    osDelay(20); /* chu kỳ lấy mẫu kiêm chống dội phím */
+    //Cần delay chống debouncing
+    osDelay(20);
   }
   /* USER CODE END 5 */
 }

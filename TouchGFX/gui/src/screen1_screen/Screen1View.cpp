@@ -1,6 +1,6 @@
 #include <gui/screen1_screen/Screen1View.hpp>
 
-/* Hàng đợi nhận mã hướng từ task đọc nút (định nghĩa trong main.c). */
+// Hàng đợi nhận mã hướng từ task đọc nút
 extern osMessageQueueId_t myQueue01Handle;
 
 Screen1View::Screen1View()
@@ -8,18 +8,20 @@ Screen1View::Screen1View()
 
 }
 
+/*
+    Hàm khởi tạo màn hình khi được tạo
+*/
 void Screen1View::setupScreen()
 {
     Screen1ViewBase::setupScreen();
-
-    /* Bỏ các widget demo còn sót (nút LED + hình tròn chuyển động). */
-    remove(btnLed);
-    remove(circle1);
-
-    /* Bắt đầu ván mới và hiển thị bàn cờ. */
+    //B1: Khởi tạo game - hàm game2048_init
     game2048_init(&game);
+
+    //Trao widget  con trỏ đến trạng thái game
     board.setGame(&game);
+
     board.setXY(0, 0);
+    //B2: Add widget Board2048
     add(board);
     board.invalidate();
 }
@@ -34,22 +36,22 @@ void Screen1View::buttonClicked()
 
 }
 
-/* Gọi mỗi khung hình: lấy lệnh hướng từ hàng đợi và cập nhật game. */
+/*
+    Hàm kiểm tra sự kiện tương tác
+    Được TouchGFX gọi mỗi khung hình
+    Sử dụng cơ chế hàng đợi phát hiện lệnh
+*/
 void Screen1View::tickEvent()
 {
-    /* Không có lệnh nút -> không làm gì. */
-    if (osMessageQueueGetCount(myQueue01Handle) == 0)
-    {
-        return;
-    }
 
     uint16_t dir = 0xFFFF;
+    // Gọi hàm GET, nếu không có thì thoát ngay (trả về osErrorResource)
     if (osMessageQueueGet(myQueue01Handle, &dir, NULL, 0) != osOK)
     {
         return;
     }
 
-    /* Khi đã thắng/thua: bấm nút bất kỳ để chơi lại ván mới. */
+    //Trạng thái win/lose: cần khởi tạo lại game mới và click nút bất kỳ
     if (game.state != GAME_PLAYING)
     {
         game2048_init(&game);
@@ -57,15 +59,15 @@ void Screen1View::tickEvent()
         return;
     }
 
-    /* Đang chơi: thực hiện nước đi theo hướng. Chỉ vẽ lại khi có thay đổi
-       (bàn cờ dịch chuyển hoặc trạng thái chuyển sang thắng/thua). */
+    // Chỉ xử lý các hướng hợp lệ
     if (dir <= GAME2048_DIR_RIGHT)
     {
-        if (game2048_move(&game, (uint8_t)dir))
-        {
-            board.invalidate();
-        }
-        else if (game.state != GAME_PLAYING)
+        // Thực hiện nước đi và lấy kết quả
+        bool moved = game2048_move(&game, (uint8_t)dir);
+
+        // Lưu ý: tính cả việc khi không còn hướng di chuyển -> trạng thái lose/win
+        // Cần thêm điều kiện game.state để xử lý
+        if (moved || game.state != GAME_PLAYING)
         {
             board.invalidate();
         }

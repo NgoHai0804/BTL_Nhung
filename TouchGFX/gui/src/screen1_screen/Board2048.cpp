@@ -10,26 +10,27 @@ using namespace touchgfx;
 /* -------------------------------------------------------------------------- */
 #define SCREEN_W        240
 #define SCREEN_H        320
-#define TILE            50                     /* cạnh mỗi ô (px)              */
-#define GAP             6                      /* khe hở giữa các ô (px)       */
-#define BOARD_X0        5                      /* lề trái lưới = (240 - 4*TILE - 5*GAP)/2 */
-#define BOARD_Y0        76                     /* đẩy lưới xuống để không đè title */
-#define BOARD_PX        (4 * TILE + 5 * GAP)    /* cạnh khối lưới = 230         */
-#define TITLE_Y         10                     /* tọa độ y của chữ "2048"      */
-#define SCORE_Y         58                     /* tọa độ y của hàng SCORE/BEST */
-#define TILE_X(col)     (BOARD_X0 + GAP + (col) * (TILE + GAP))  /* x của ô theo cột */
-#define TILE_Y(row)     (BOARD_Y0 + GAP + (row) * (TILE + GAP))  /* y của ô theo hàng */
-#define CONTENT_BUDGET  (TILE - 4)             /* bề rộng/cao tối đa chữ trong ô */
+#define TILE            50                                       // cạnh mỗi ô (px)              
+#define GAP             6                                        // khe hở giữa các ô (px)     
+#define BOARD_X0        5                                        // lề trái lưới = (240 - 4*TILE - 5*GAP)/2 
+#define BOARD_Y0        76                                       // đẩy lưới xuống để không đè title 
+#define BOARD_PX        (4 * TILE + 5 * GAP)                     // cạnh khối lưới = 230        
+#define TITLE_Y         10                                       // tọa độ y của chữ "2048"      
+#define SCORE_Y         58                                       // tọa độ y của hàng SCORE/BEST 
+#define TILE_X(col)     (BOARD_X0 + GAP + (col) * (TILE + GAP))  // x của ô theo cột 
+#define TILE_Y(row)     (BOARD_Y0 + GAP + (row) * (TILE + GAP))  // y của ô theo hàng 
+#define CONTENT_BUDGET  (TILE - 4)                               // bề rộng/cao tối đa chữ trong ô 
 
-/* -------------------------------------------------------------------------- */
-/* Font bitmap 5x7 (lưu theo cột, bit0 = hàng trên cùng)                      */
-/* -------------------------------------------------------------------------- */
+/* ------------- */
+/* Font bitmap 5x7
+/* --------------*/
 typedef struct
 {
     char    c;
     uint8_t col[5];
 } Glyph;
 
+//Mảng lưu trữ dữ liệu của ký tự theo cột (pixel)
 static const Glyph FONT[] = {
     { ' ', { 0x00, 0x00, 0x00, 0x00, 0x00 } },
     { '!', { 0x00, 0x00, 0x5F, 0x00, 0x00 } },
@@ -63,7 +64,9 @@ static const Glyph FONT[] = {
     { 'Y', { 0x07, 0x08, 0x70, 0x08, 0x07 } },
 };
 
-/* Tra cứu dữ liệu glyph của một ký tự; không tìm thấy thì trả về ô trống. */
+/* 
+    Hàm tra cứu dữ liệu ký tự, nếu không trả về ô trống - ký tự trắng
+*/
 static const uint8_t* getGlyph(char c)
 {
     for (unsigned i = 0; i < sizeof(FONT) / sizeof(FONT[0]); i++)
@@ -73,10 +76,12 @@ static const uint8_t* getGlyph(char c)
             return FONT[i].col;
         }
     }
-    return FONT[0].col; /* ký tự trắng */
+    return FONT[0].col;
 }
 
-/* Đổi số nguyên không dấu sang chuỗi (không có số 0 ở đầu). */
+/* 
+    Hàm đổi số nguyên không dấu sang chuỗi
+*/
 static void uintToStr(uint16_t value, char* out)
 {
     char tmp[6];
@@ -101,10 +106,9 @@ static void uintToStr(uint16_t value, char* out)
     out[k] = '\0';
 }
 
-/* -------------------------------------------------------------------------- */
-/* Bảng màu các ô (theo phong cách 2048 cổ điển)                              */
-/* -------------------------------------------------------------------------- */
-/* Màu nền của ô tương ứng với giá trị. */
+/*
+    Bảng màu các ô - màu nền của ô tương ứng với giá trị
+*/
 colortype Board2048::tileColor(uint16_t value)
 {
     switch (value)
@@ -125,7 +129,7 @@ colortype Board2048::tileColor(uint16_t value)
     }
 }
 
-/* Màu chữ trong ô: ô 2 và 4 dùng chữ sẫm, các ô lớn hơn dùng chữ sáng. */
+/* Màu chữ - màu khối*/
 colortype Board2048::tileTextColor(uint16_t value)
 {
     if (value == 2 || value == 4)
@@ -135,9 +139,10 @@ colortype Board2048::tileTextColor(uint16_t value)
     return Color::getColorFromRGB(249, 246, 242);
 }
 
-/* -------------------------------------------------------------------------- */
-/* Khởi tạo widget                                                            */
-/* -------------------------------------------------------------------------- */
+
+/*
+    Hàm khởi tạo widget bảng
+*/
 Board2048::Board2048()
     : game(0)
 {
@@ -155,8 +160,11 @@ Rect Board2048::getSolidRect() const
 /* -------------------------------------------------------------------------- */
 /* Các hàm vẽ mức thấp                                                        */
 /* -------------------------------------------------------------------------- */
-/* Tô một hình chữ nhật theo tọa độ tương đối của widget:
-   cắt theo vùng cần vẽ lại (area), đổi sang tọa độ tuyệt đối rồi tô. */
+
+/* 
+   Hàm tô một hình chữ nhật theo tọa độ tương đối của widget:
+   cắt theo vùng cần vẽ lại (area), đổi sang tọa độ tuyệt đối rồi tô.
+*/
 void Board2048::fillRel(const Rect& area, int16_t x, int16_t y,
                         int16_t w, int16_t h, colortype color) const
 {
@@ -168,7 +176,9 @@ void Board2048::fillRel(const Rect& area, int16_t x, int16_t y,
     }
 }
 
-/* Vẽ một ký tự với hệ số phóng to nguyên s: mỗi điểm bật của font là ô s x s. */
+/* 
+    Hàm vẽ một ký tự với hệ số phóng to nguyên s: mỗi điểm bật của font là ô s x s. 
+*/
 void Board2048::drawChar(const Rect& area, int16_t x, int16_t y,
                          char c, int16_t s, colortype color) const
 {
@@ -186,7 +196,9 @@ void Board2048::drawChar(const Rect& area, int16_t x, int16_t y,
     }
 }
 
-/* Tính bề rộng chuỗi ở hệ số s: mỗi ký tự rộng 5 cột + 1 khe, ký tự cuối bỏ khe. */
+/*
+    Hàm tính bề rộng chuỗi ở hệ số s: mỗi ký tự rộng 5 cột + 1 khe, ký tự cuối bỏ khe. 
+*/
 int16_t Board2048::textWidth(const char* str, int16_t s)
 {
     int16_t len = 0;
@@ -268,19 +280,23 @@ int16_t Board2048::drawTextFrac(const Rect& area, int16_t x, int16_t y,
     return textWidthFrac(str, num, den);
 }
 
-/* -------------------------------------------------------------------------- */
-/* Hàm vẽ chính: được TouchGFX gọi mỗi khi widget cần vẽ lại                   */
-/* -------------------------------------------------------------------------- */
+
+/* 
+    Hàm vẽ chính: được TouchGFX gọi mỗi khi widget cần vẽ lại
+*/
 void Board2048::draw(const Rect& invalidatedArea) const
-{
+{   
+    // Background trang
     const colortype pageBg   = Color::getColorFromRGB(250, 248, 239);
+    // Background bảng
     const colortype boardBg  = Color::getColorFromRGB(187, 173, 160);
+    // Màu chữ 
     const colortype darkText = Color::getColorFromRGB(119, 110, 101);
 
-    /* Nền cả trang. */
+    // Gọi hàm để fill Background trang
     fillRel(invalidatedArea, 0, 0, SCREEN_W, SCREEN_H, pageBg);
 
-    /* Tiêu đề "2048" căn giữa. */
+    // Tiêu đề 2048 căn giữa
     {
         const char* title = "2048";
         int16_t s  = 6;
@@ -288,20 +304,22 @@ void Board2048::draw(const Rect& invalidatedArea) const
         drawText(invalidatedArea, (SCREEN_W - tw) / 2, TITLE_Y, title, s, darkText);
     }
 
-    /* Hàng điểm: SCORE bên trái, BEST bên phải, cỡ 1.5x (= 3/2). */
+    // Hàng điểm SCORE + BEST
     if (game != 0)
     {
         char num[6];
-        const int16_t mn = 3, dn = 2;       /* fractional scale 3/2 */
-        const int16_t gapW = 4 * mn / dn;   /* spacing between label and value */
+        const int16_t mn = 3, dn = 2;      
+        const int16_t gapW = 4 * mn / dn;
 
-        /* SCORE: căn trái. */
+        // SCORE: căn trái
+        // Lấy điểm số từ thuộc tính score từ struct game
         uintToStr(game->score, num);
         int16_t lx = BOARD_X0 + GAP;
         drawTextFrac(invalidatedArea, lx, SCORE_Y, "SCORE", mn, dn, darkText);
         drawTextFrac(invalidatedArea, lx + textWidthFrac("SCORE", mn, dn) + gapW, SCORE_Y, num, mn, dn, darkText);
 
-        /* BEST: căn phải (tính bề rộng để lùi vào từ mép phải lưới). */
+        // BEST: căn phải
+        // Lấy điểm kỷ lục từ hàm game2048_get_best
         uintToStr(game2048_get_best(), num);
         int16_t bw = textWidthFrac("BEST", mn, dn) + gapW + textWidthFrac(num, mn, dn);
         int16_t bx = (BOARD_X0 + BOARD_PX - GAP) - bw;
@@ -309,10 +327,10 @@ void Board2048::draw(const Rect& invalidatedArea) const
         drawTextFrac(invalidatedArea, bx + textWidthFrac("BEST", mn, dn) + gapW, SCORE_Y, num, mn, dn, darkText);
     }
 
-    /* Khối nền của lưới (màu lộ ra ở các khe giữa các ô). */
+    // Fill nền cho bảng
     fillRel(invalidatedArea, BOARD_X0, BOARD_Y0, BOARD_PX, BOARD_PX, boardBg);
 
-    /* Vẽ 16 ô của lưới 4x4. */
+    // Vẽ lưới 4x4
     for (int16_t row = 0; row < 4; row++)
     {
         for (int16_t col = 0; col < 4; col++)
@@ -328,7 +346,7 @@ void Board2048::draw(const Rect& invalidatedArea) const
                 char num[6];
                 uintToStr(value, num);
 
-                /* Chọn cỡ chữ lớn nhất vẫn vừa trong ô (số càng nhiều chữ số càng nhỏ). */
+                // Xử lý cỡ chữ -> khi số càng to thì càng nhỏ
                 int16_t s = 1;
                 for (int16_t cand = 6; cand >= 1; cand--)
                 {
@@ -339,7 +357,7 @@ void Board2048::draw(const Rect& invalidatedArea) const
                     }
                 }
 
-                /* Căn giữa số trong ô. */
+                // Căn giữa số
                 int16_t tw = textWidth(num, s);
                 int16_t th = 7 * s;
                 int16_t nx = tx + (TILE - tw) / 2;
@@ -349,7 +367,7 @@ void Board2048::draw(const Rect& invalidatedArea) const
         }
     }
 
-    /* Lớp phủ kết thúc ván (thắng / thua): hiện điểm và kỷ lục. */
+    // Lớp phủ kết thúc ván (thắng / thua): hiện điểm và kỷ lục.
     if (game != 0 && game->state != GAME_PLAYING)
     {
         const colortype panelBg    = Color::getColorFromRGB(119, 110, 101);
@@ -358,7 +376,7 @@ void Board2048::draw(const Rect& invalidatedArea) const
                                           ? Color::getColorFromRGB(237, 194, 46)
                                           : Color::getColorFromRGB(246, 124, 95);
 
-        /* Bảng thông báo đặt giữa màn hình. */
+        // Toast thông báo đặt giữa màn hình.
         const int16_t panelX = 18;
         const int16_t panelW = SCREEN_W - 2 * panelX;   /* 204 */
         const int16_t panelY = 86;
@@ -366,12 +384,12 @@ void Board2048::draw(const Rect& invalidatedArea) const
 
         fillRel(invalidatedArea, panelX, panelY, panelW, panelH, panelBg);
 
-        /* Tiêu đề: WIN! nếu thắng, GAME OVER nếu thua. */
+        // Header: WIN! nếu thắng, GAME OVER nếu thua.
         const char* msg = (game->state == GAME_WIN) ? "WIN!" : "GAME OVER";
         int16_t ts = 3;
         drawText(invalidatedArea, (SCREEN_W - textWidth(msg, ts)) / 2, panelY + 16, msg, ts, titleColor);
 
-        /* Hai dòng "NHÃN  giá trị"; giá trị căn cùng cột để thẳng hàng. */
+        // Hai dòng giá trị. 
         char num[6];
         int16_t ls = 2;
         int16_t lineX = panelX + 16;
@@ -384,7 +402,7 @@ void Board2048::draw(const Rect& invalidatedArea) const
         drawText(invalidatedArea, lineX, panelY + 80, "BEST", ls, panelText);
         drawText(invalidatedArea, lineX + textWidth("SCORE", ls) + 6 * ls, panelY + 80, num, ls, panelText);
 
-        /* Gợi ý: bấm nút bất kỳ để chơi lại. */
+        // Suggestion line: bấm nút bất kỳ để chơi lại.
         const char* hint = "PRESS KEY";
         int16_t hs = 2;
         drawText(invalidatedArea, (SCREEN_W - textWidth(hint, hs)) / 2, panelY + 116, hint, hs, panelText);
